@@ -1,0 +1,49 @@
+version: '3.3'
+services:
+  mariadb:
+    image: mariadb:10.5
+    container_name: mariadb
+    hostname: mariadb
+    env_file: ./.env/mariadb.env
+    volumes:
+      - ./persistent-data/db/mariadb:/var/lib/mysql
+      - ./persistent-data/mysql/conf.d:/etc/mysql/conf.d
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    ports:
+      - "3306:3306"
+    networks:
+      - db-net
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: always
+
+  lista-php:
+    build:
+      context: ./persistent-data/build/lista-php/.
+      dockerfile: Dockerfile
+    container_name: lista-php
+    hostname: lista-php
+    expose:
+      - "80"
+    environment:
+      - PHP_DB_HOST=127.0.0.1
+      - PHP_DB_USER=Lista_User
+      - PHP_DB_PASSWORD=UniversidadEuropea
+      - PHP_DB_NAME=lista
+    volumes:
+      - "./persistent-data/app:/var/www/html"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "/etc/localtime:/etc/localtime:ro"
+    network_mode: host
+    depends_on:
+      - mariadb
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    restart: unless-stopped
+
+networks:
+  db-net:
+    driver: bridge

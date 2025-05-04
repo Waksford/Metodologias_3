@@ -1,0 +1,5 @@
+# Modify this the environmental variables in this file and save as mariadb.env
+MYSQL_ROOT_PASSWORD=root_password
+MARIADB_DATABASE=lista
+MARIADB_USER=Lista_User
+MARIADB_PASSWORD=UniversidadEuropea
