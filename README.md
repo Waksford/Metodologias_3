@@ -40,7 +40,7 @@ Está contenerizada con Docker para facilitar su despliegue en cualquier entorno
 3. Ejecuta el proyecto:
    docker compose up -d o docker-compose up -d ( Según la versión de docker instalada)
 4. Abre el navegador en: http://localhost
-5. Si la tabla eventos no existe aún, créala con los siguientes pasos :
+5. Si la tabla eventos y contactos no existe aún, créala con los siguientes pasos :
    - sudo docker exec -it mariadb mysql -u root -p
    - Introduce tu contraseña de ROOT
    - Pega el siguiente SQL :
@@ -51,6 +51,14 @@ Está contenerizada con Docker para facilitar su despliegue en cualquier entorno
          fecha DATE NOT NULL,
          creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+     CREATE TABLE IF NOT EXISTS contactos (
+         id INT AUTO_INCREMENT PRIMARY KEY,
+         nombre VARCHAR(100) NOT NULL,
+         telefono VARCHAR(20),
+         email VARCHAR(100),
+         direccion VARCHAR(255)
+    );
+    EXIT;
 
 ## Consideraciones de seguridad aplicadas
 
@@ -127,3 +135,4 @@ Las pruebas funcionales se realizaron en entorno local con Docker, verificando:
 
 Jaime Alguacil Plaza
   [Repositorio individual anterior](https://github.com/Waksford/recordatorio-fechas)
+Airam Socas 
