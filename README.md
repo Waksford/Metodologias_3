@@ -13,15 +13,22 @@ Está contenerizada con Docker para facilitar su despliegue en cualquier entorno
 ###  Estructura del proyecto
 
 ├── docker-compose.yml
-├── .env
-│   └── mariadb.example
 ├── persistent-data
 │   ├── app
-│   │   ├── add.php
-│   │   ├── db.php
-│   │   ├── delete.php
-│   │   ├── edit.php
-│   │   └── index.php
+│   │   ├── index.php
+│   │   ├── proyecto_airam
+│   │   │   ├── add.php
+│   │   │   ├── db.php
+│   │   │   ├── delete.php
+│   │   │   ├── edit.php
+│   │   │   ├── index.php
+│   │   │   └── styles.css
+│   │   └── proyecto_jaime
+│   │       ├── add.php
+│   │       ├── db.php
+│   │       ├── delete.php
+│   │       ├── edit.php
+│   │       └── index.php
 │   ├── build
 │   │   └── lista-php
 │   │       └── Dockerfile
@@ -131,8 +138,29 @@ Las pruebas funcionales se realizaron en entorno local con Docker, verificando:
 - Validación de campos requeridos y formatos incorrectos en ambos módulos.
 - Persistencia de datos tras reiniciar contenedores.
 
+## Módulo adicional: Agenda de Contactos (proyecto_airam)
+
+El segundo módulo corresponde a una **agenda de contactos**, desarrollada en PHP. Permite añadir, editar y eliminar contactos personales con los siguientes campos:
+
+- Nombre
+- Teléfono
+- Email
+- Dirección
+
+Este módulo se encuentra en: "/persistent-data/app/proyecto_airam/"
+
+Compuesto por:
+
+- `index.php` – formulario y listado
+- `add.php`, `edit.php`, `delete.php` – operaciones CRUD
+- `db.php` – conexión a la base de datos
+- `styles.css` – hoja de estilos sencilla
+
+> Este módulo fue entregado parcialmente y fue adaptado e integrado por **Jaime Alguacil Plaza** para que funcionara en el entorno contenerizado común y con la misma base de datos (`lista`). La diferencia de estilo y estructura refleja el trabajo independiente de los miembros.
+
 ## Autores 
 
-Jaime Alguacil Plaza
+**Jaime Alguacil Plaza**
   [Repositorio individual anterior](https://github.com/Waksford/recordatorio-fechas)
-Airam Socas 
+
+**Airam Socas**
