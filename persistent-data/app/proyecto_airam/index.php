@@ -1,7 +1,8 @@
 <?php
 require 'db.php';
 $conexion = obtenerConexion();
-$contactos = $conexion->query("SELECT * FROM contactos ORDER BY nombre ASC")->fetchAll(PDO::FETCH_ASSOC);
+$resultado = $conexion->query("SELECT * FROM contactos");
+$contactos = $resultado ? $resultado->fetch_all(MYSQLI_ASSOC) : [];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -13,7 +14,15 @@ $contactos = $conexion->query("SELECT * FROM contactos ORDER BY nombre ASC")->fe
 <body>
     <div class="contenedor">
         <h1>Agenda de Contactos</h1>
-        
+        <form method="GET">
+        <input type="text" name="busqueda" placeholder="Buscar contacto...">
+        <button type="submit">Buscar</button>
+        </form>
+        <?php
+	if (isset($_GET['busqueda'])) {
+    	echo "<p>Resultados para: " . $_GET['busqueda'] . "</p>";
+	}
+	?>
         <form action="add.php" method="POST">
             <input type="text" name="nombre" placeholder="Nombre" required>
             <input type="text" name="telefono" placeholder="Teléfono" required>

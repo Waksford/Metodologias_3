@@ -1,0 +1,6 @@
+projectKey=amalgama-apps
+serverUrl=http://localhost:9000
+serverVersion=25.5.0.107428
+dashboardUrl=http://localhost:9000/dashboard?id=amalgama-apps
+ceTaskId=2ef78cd4-2920-4728-b76d-a9e4c1892729
+ceTaskUrl=http://localhost:9000/api/ce/task?id=2ef78cd4-2920-4728-b76d-a9e4c1892729

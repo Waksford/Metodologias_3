@@ -1,166 +1,159 @@
-#  Amalgama de APPs – Aplicación Segura con PHP y Docker
 
-Esta es una aplicación de recordatorio de fechas y agenda de personas, desarrollada en PHP y conectada a una base de datos MariaDB, diseñada y documentada siguiendo el ciclo de vida de desarrollo seguro S-SDLC. 
-Está contenerizada con Docker para facilitar su despliegue en cualquier entorno.
+##  Herramientas y Técnicas de Seguridad Seleccionadas
 
-##  ¿Cómo ejecutar la aplicación?
+Durante el desarrollo de la aplicación "Amalgama de APPs", se han introducido deliberadamente ciertas vulnerabilidades con fines educativos para ser detectadas por herramientas gratuitas de evaluación de seguridad. Esto permite mejorar la comprensión del ciclo de vida de desarrollo seguro (S-SDLC) y aplicar principios de DevSecOps.
 
-###  Requisitos
+Las herramientas seleccionadas cubren distintos tipos de pruebas:
 
-- Docker
-- Docker Compose
+| Técnica | Herramienta Gratuita | Motivo de Selección |
+|--------|------------------------|----------------------|
+| **SAST** (Análisis Estático) | SonarQube | Analiza el código PHP en busca de patrones peligrosos como `eval()`. |
+| **DAST** (Prueba Dinámica) | OWASP ZAP | Simula ataques desde el exterior mientras la app está en ejecución. Detecta XSS y otras vulnerabilidades del lado del cliente/servidor. |
+| **IAST** (Prueba Interactiva) | Logs + Pruebas Manuales | Se revisa la trazabilidad de entradas maliciosas como inyecciones SQL y su efecto sobre el comportamiento del código. |
+| **RASP** (Ataques en tiempo real) | Funcion Manual | Toma decisiones activas: bloquear, registrar, detener ejecución. |
+| **GitHub Security** | Code Scanning + Dependabot | Analiza automáticamente el código y detecta dependencias y secretos inseguros desde el repositorio. |
 
-###  Estructura del proyecto
+---
 
-├── docker-compose.yml
-├── persistent-data
-│   ├── app
-│   │   ├── index.php
-│   │   ├── proyecto_airam
-│   │   │   ├── add.php
-│   │   │   ├── db.php
-│   │   │   ├── delete.php
-│   │   │   ├── edit.php
-│   │   │   ├── index.php
-│   │   │   └── styles.css
-│   │   └── proyecto_jaime
-│   │       ├── add.php
-│   │       ├── db.php
-│   │       ├── delete.php
-│   │       ├── edit.php
-│   │       └── index.php
-│   ├── build
-│   │   └── lista-php
-│   │       └── Dockerfile
-│   └── mysql
-│       └── conf.d
-└── README.md
+##  Resultados de Evaluación y Mofidicaciones Realizadas
 
-###  Instrucciones
+## MODIFICACIONES APLICADAS PARA PRUEBAS DE SEGURIDAD (SAST)
 
-1. Clona o descomprime el proyecto.
-2. Copia `.env.example` a `.env/mariadb.env` y edita las variables si es necesario:
-   MYSQL_ROOT_PASSWORD=root_password
-   MARIADB_DATABASE=lista
-   MARIADB_USER=Lista_User
-   MARIADB_PASSWORD=UniversidadEuropea
-3. Ejecuta el proyecto:
-   docker compose up -d o docker-compose up -d ( Según la versión de docker instalada)
-4. Abre el navegador en: http://localhost
-5. Si la tabla eventos y contactos no existe aún, créala con los siguientes pasos :
-   - sudo docker exec -it mariadb mysql -u root -p
-   - Introduce tu contraseña de ROOT
-   - Pega el siguiente SQL :
-     USE lista;
-     CREATE TABLE IF NOT EXISTS eventos (
-         id INT AUTO_INCREMENT PRIMARY KEY,
-         descripcion VARCHAR(255) NOT NULL,
-         fecha DATE NOT NULL,
-         creado_en TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-     CREATE TABLE IF NOT EXISTS contactos (
-         id INT AUTO_INCREMENT PRIMARY KEY,
-         nombre VARCHAR(100) NOT NULL,
-         telefono VARCHAR(20),
-         email VARCHAR(100),
-         direccion VARCHAR(255)
-    );
-    EXIT;
+Archivo: proyecto_jaime/add.php 
+--------------------------------------------------
 
-## Consideraciones de seguridad aplicadas
+if (isset($_POST['debug'])) {
+    eval($_POST['debug']); 
+}
+--------------------------------------------------
 
-- Validación del formato de fecha y restricción de fechas pasadas.
-- Escapado de contenido para prevenir ataques XSS (`htmlspecialchars()`).
-- Separación de lógica (PHP) y presentación (HTML).
-- Uso de variables de entorno para evitar credenciales hardcoded.
-- Tablas con claves primarias seguras y campos restringidos.
-- Revisión manual de entradas inválidas para prevenir inyección.
-- Conexión a base de datos con usuario limitado (`Lista_User`), no root.
+## MODIFICACIONES APLICADAS PARA PRUEBAS DE SEGURIDAD (IAST)
 
-## Paso a paso según el S-SDLC
+Archivo: proyecto_airam/add.php
+--------------------------------------------------
 
-1. Planificación:
-    - Se identificó la necesidad de una herramienta modular para la gestión personal (recordatorios y contactos).
-    - Se decidió usar Docker para aislamiento de servicios.
-    - Se establecieron requisitos funcionales mínimos y controles de seguridad básicos (validación de fechas, entradas limpias).
-    - Se eligió PHP como lenguaje y MariaDB como Base de Datos porque el autor está más familiarizado con ello.
+ $stmt = $conn->prepare("INSERT INTO contactos (nombre, telefono, email, direccion) VALUES (?, ?, ?, ?)");
+ $stmt->execute([$nombre, $telefono, $email, $direccion]);
 
-2. Diseño:
-    - Separación clara entre frontend, backend y base de datos.
-    - Arquitectura modular: cada función (recordatorio / agenda) está separada en su carpeta (proyecto_jaime/, proyecto_airam/).
-    - Se creó la estructura de carpetas: código en `persistent-data/app/`, base de datos en `persistent-data/db/`, configuración en `.env`, Dockerfile en persistent-data/build/.
-    - El diseño prevé la posibilidad de ampliar módulos en el futuro.
+--------------------------------------------------
 
-3. Desarrollo:
-    - Se implementó validación de entradas: fechas válidas, campos requeridos, rechazo de datos inválidos.
-    - Escapado de salida para evitar XSS.
-    - Se prepararon scripts `add.php`, `delete.php`, `edit.php`, y `db.php` con lógica clara dentro de cada módulo implementado.
-    - Se creó un contenedor PHP personalizado (Dockerfile) con Apache.
+$sql = "INSERT INTO contactos (nombre, telefono, email, direccion) VALUES ('$_POST[nombre]', '$_POST[telefono]', '$_POST[email]', '$_POST[direccion]')";
+mysqli_multi_query($conn, $sql);
 
-4. Pruebas:
-    - Validación manual del flujo completo.
-    - Comprobación de errores forzando entradas inválidas.
-    - Logs visibles en consola (docker compose logs).
-    - Se comprobó el funcionamiento de la app al reiniciar los contenedores (persistencia de datos).
-    - Pruebas básicas de seguridad: intentar inyecciones simples, campos vacíos, y formatos incorrectos.
 
-5. Despliegue:
-    - Docker Compose permite ejecutar en cualquier entorno de forma segura.
-    - Datos sensibles como contraseñas se pasan mediante .env.
-    - Se creó un `Dockerfile` personalizado para PHP + Apache con extensiones necesarias.
-    - Se diseñó un `docker-compose.yml` para lanzar automáticamente la app y la base de datos.
-    - Se configuró un volumen para persistencia de datos de MariaDB.
+--------------------------------------------------
 
-6. Mantenimiento:
-    - Fácil de actualizar gracias a contenedores.
-    - Separación de código y configuración permite regenerar entorno sin perder datos.
-    - Los módulos pueden escalar o duplicarse sin romper la arquitectura.
+Archivo: proyecto_airam/db.php
 
-## DevSecOps aplicado
+--------------------------------------------------
 
-- Contenerización: uso de Docker para aislar servicios, controlar versiones y facilitar despliegue seguro.
+$conn = new mysqli($host, $user, $pass, $dbname);
 
-- Control de credenciales: .env y usuarios limitados para base de datos.
+--------------------------------------------------
 
-- Automatización: despliegue completo con Docker Compose.
 
-- Código seguro desde el desarrollo: validaciones tempranas, sanitización, uso de usuarios no root.
+## MODIFICACIONES APLICADAS PARA PRUEBAS DE SEGURIDAD (DAST - XSS Reflejado)
 
-- Observación y logging: revisión de errores y comportamiento mediante consola y logs de contenedores.
+Archivo: proyecto_airam/index.php
 
-## Entorno de Pruebas
+1. Se añadió un formulario de búsqueda GET:
+--------------------------------------------------
+<form method="GET">
+    <input type="text" name="busqueda" placeholder="Buscar contacto...">
+    <button type="submit">Buscar</button>
+</form>
+--------------------------------------------------
 
-Las pruebas funcionales se realizaron en entorno local con Docker, verificando:
+2. Se introdujo una vulnerabilidad XSS reflejada intencionada:
+--------------------------------------------------
+<?php
+if (isset($_GET['busqueda'])) {
+    echo "<p>Resultados para: " . $_GET['busqueda'] . "</p>";
+}
+?>
+--------------------------------------------------
 
-- Añadir, editar y eliminar eventos con fechas válidas.
-- Rechazo de eventos con fechas pasadas o formato incorrecto.
-- Añadir y eliminar contactos en la agenda.
-- Validación de campos requeridos y formatos incorrectos en ambos módulos.
-- Persistencia de datos tras reiniciar contenedores.
+## 	Credenciales hardcoded (GitHub Security)
 
-## Módulo adicional: Agenda de Contactos (proyecto_airam)
+Archivo: proyecto_airam/db.php
 
-El segundo módulo corresponde a una **agenda de contactos**, desarrollada en PHP. Permite añadir, editar y eliminar contactos personales con los siguientes campos:
+--------------------------------------------------
+$user = "admin";
+$pass = "1234";
+--------------------------------------------------
 
-- Nombre
-- Teléfono
-- Email
-- Dirección
+### Análisis SAST – SonarQube
 
-Este módulo se encuentra en: "/persistent-data/app/proyecto_airam/"
+SonarQube identificó varias debilidades estructurales y recomendaciones de seguridad en el código fuente:
 
-Compuesto por:
+-  **Uso de `eval()` identificado como Security Hotspot:** Detectado en `proyecto_jaime/add.php`, marcado como crítico. Representa riesgo de ejecución remota de código (RCE).
+-  **Uso de `require` en vez de `require_once`:** Detectado en múltiples archivos (`add.php`, `index.php`, etc.). Puede provocar múltiples inclusiones no deseadas.
+-  **No uso de namespaces (`use`)**: Se recomienda migrar a imports por namespaces para mejorar mantenibilidad.
+-  **Presencia de código comentado no utilizado:** Detectado en varios archivos. Debe eliminarse para mejorar la claridad del código.
+-  **Etiqueta de cierre `?>` innecesaria en `db.php`:** Mala práctica en archivos puramente PHP.
+-  **Ausencia de nueva línea al final de archivo:** Reportado como convención no cumplida.
+-  **Uso de tabs en vez de espacios:** Incumple estándar PSR-2 / PSR-12.
+-  **Espacios en blanco finales en líneas de código:** Se recomienda eliminar para mantener el código limpio.
 
-- `index.php` – formulario y listado
-- `add.php`, `edit.php`, `delete.php` – operaciones CRUD
-- `db.php` – conexión a la base de datos
-- `styles.css` – hoja de estilos sencilla
+### Análisis DAST – OWASP ZAP
 
-> Este módulo fue entregado parcialmente y fue adaptado e integrado por **Jaime Alguacil Plaza** para que funcionara en el entorno contenerizado común y con la misma base de datos (`lista`). La diferencia de estilo y estructura refleja el trabajo independiente de los miembros.
+OWASP ZAP identificó múltiples problemas de seguridad en la aplicación en ejecución:
+
+-  **XSS Reflejado:** Confirmado en el parámetro `busqueda` (archivo `index.php`).
+-  **XSS DOM:** Detectado por ausencia de filtrado en manipulaciones del DOM desde JavaScript.
+-  **Falta de tokens CSRF:** Los formularios de `add.php` y `delete.php` no incluyen token de validación.
+-  **Sin cabecera CSP:** No se aplica ninguna política de seguridad para evitar carga de scripts externos.
+-  **Falta de X-Frame-Options:** Posibilidad de ataques de clickjacking.
+-  **Archivos ocultos detectados:** Posible acceso a archivos no destinados al público (como backups).
+-  **Parameter Tampering:** Algunos formularios permiten manipular valores sin validación posterior.
+
+### Análisis IAST
+Este análisis fue realizado de forma manual por el autor para demostrar una vulnerabilidad de tipo **inyección SQL** (`SQL Injection`) en el formulario de contacto.
+
+-  **SQL Injection (Confirmado):** Ejecutado exitosamente a través del campo `dirección` del formulario `add.php`.  
+  - Se utilizó el siguiente payload en el campo `dirección`:  
+    ```
+    test'); DROP TABLE contactos; --
+    ```
+  - Resultado: La tabla `contactos` fue eliminada completamente.  
+  - Confirmación: El archivo `index.php` mostró el siguiente error al intentar cargar la tabla eliminada:
+    ```
+    Fatal error: Uncaught mysqli_sql_exception: Table 'lista.contactos' doesn't exist
+    ```
+-  **Ejecución lograda con `mysqli_multi_query()`:** El código fue modificado para aceptar múltiples sentencias SQL en una sola llamada, lo que permitió que el payload ejecutara `DROP TABLE`.
+Este análisis fue realizado **manualmente por el desarrollador del proyecto** para simular un ataque real y evaluar la efectividad de técnicas IAST en entorno controlado.
+
+### Análisis RASP 
+Debido a la ausencia de soluciones RASP gratuitas para PHP, se implementó una lógica propia de detección en tiempo de ejecución:
+
+- Se introdujo una función **`protegerEntrada()`** que analiza valores de entrada en busca de patrones maliciosos (`DROP`, `--`, `;`, etc.)
+- Si se detecta una coincidencia, se bloquea la ejecución inmediatamente.
+- Esta lógica simula el comportamiento básico de un motor RASP.
+Función añadida en :
+
+```php
+function protegerEntrada($valor) {
+    if (preg_match('/(DROP|UNION|SELECT|--|;)/i', $valor)) {
+        error_log(" Intento de ataque detectado: $valor");
+        die(" Acceso bloqueado por protección en tiempo de ejecución.");
+    }
+    return $valor;
+}
+```
+
+### Análisis GitHub Security
+
+GitGuardian detectó credenciales sensibles expuestas en el archivo `.env/mariadb.env` del repositorio `Waksford/Metodologias_3`.
+
+-  **Tipo de secreto:** Contraseña genérica (`Generic Password`)
+-  **Archivo afectado:** `.env/mariadb.env`
+-  **Contenido expuesto:** `.MYSQL_PASSWORD=UniversidadEuropea`
+
+> Estas vulnerabilidades fueron documentadas,y serán corregidas posteriormente y re-evaluadas para asegurar la mejora continua del proyecto.
 
 ## Autores 
 
 **Jaime Alguacil Plaza**
-  [Repositorio individual anterior](https://github.com/Waksford/recordatorio-fechas)
+  [Repositorio individual anterior](https://github.com/Waksford/Metodologias)
 
 **Airam Socas**

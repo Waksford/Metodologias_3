@@ -43,6 +43,21 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     restart: unless-stopped
+  
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      - PMA_HOST=mariadb
+      - PMA_PORT=3306
+      - UPLOAD_LIMIT=20480000
+    ports:
+      - "8080:80"  # Puedes acceder a phpMyAdmin en http://localhost:8080
+    networks:
+      - db-net
+    depends_on:
+      - mariadb
+    restart: always
 
 networks:
   db-net:
