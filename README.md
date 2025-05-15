@@ -14,73 +14,72 @@ Las herramientas seleccionadas cubren distintos tipos de pruebas:
 | **GitHub Security** | Code Scanning + Dependabot | Analiza automáticamente el código y detecta dependencias y secretos inseguros desde el repositorio. |
 
 ---
+## Resultados de Evaluación y Modificaciones Realizadas
 
-##  Resultados de Evaluación y Mofidicaciones Realizadas
+---
 
-## MODIFICACIONES APLICADAS PARA PRUEBAS DE SEGURIDAD (SAST)
+### MODIFICACIONES APLICADAS PARA PRUEBAS DE SEGURIDAD (SAST)
 
-Archivo: proyecto_jaime/add.php 
---------------------------------------------------
+ Archivo: `proyecto_jaime/add.php`
 
+```php
 if (isset($_POST['debug'])) {
-    eval($_POST['debug']); 
+    eval($_POST['debug']); //Vulnerabilidad simulada: ejecución remota de código
 }
---------------------------------------------------
+```
+---
 
 ## MODIFICACIONES APLICADAS PARA PRUEBAS DE SEGURIDAD (IAST)
 
-Archivo: proyecto_airam/add.php
---------------------------------------------------
-
+Archivo anterior : proyecto_airam/add.php
+```
  $stmt = $conn->prepare("INSERT INTO contactos (nombre, telefono, email, direccion) VALUES (?, ?, ?, ?)");
  $stmt->execute([$nombre, $telefono, $email, $direccion]);
 
---------------------------------------------------
-
+```
+En vez de :
+```
 $sql = "INSERT INTO contactos (nombre, telefono, email, direccion) VALUES ('$_POST[nombre]', '$_POST[telefono]', '$_POST[email]', '$_POST[direccion]')";
 mysqli_multi_query($conn, $sql);
+```
 
+Y por último -> Archivo: proyecto_airam/db.php
 
---------------------------------------------------
-
-Archivo: proyecto_airam/db.php
-
---------------------------------------------------
-
+```
 $conn = new mysqli($host, $user, $pass, $dbname);
 
---------------------------------------------------
-
+```
+---
 
 ## MODIFICACIONES APLICADAS PARA PRUEBAS DE SEGURIDAD (DAST - XSS Reflejado)
 
 Archivo: proyecto_airam/index.php
 
 1. Se añadió un formulario de búsqueda GET:
---------------------------------------------------
+```
 <form method="GET">
     <input type="text" name="busqueda" placeholder="Buscar contacto...">
     <button type="submit">Buscar</button>
 </form>
---------------------------------------------------
-
+```
 2. Se introdujo una vulnerabilidad XSS reflejada intencionada:
---------------------------------------------------
+```
 <?php
 if (isset($_GET['busqueda'])) {
     echo "<p>Resultados para: " . $_GET['busqueda'] . "</p>";
 }
 ?>
---------------------------------------------------
+```
+---
 
 ## 	Credenciales hardcoded (GitHub Security)
 
 Archivo: proyecto_airam/db.php
-
---------------------------------------------------
+```
 $user = "admin";
 $pass = "1234";
---------------------------------------------------
+```
+---
 
 ### Análisis SAST – SonarQube
 
